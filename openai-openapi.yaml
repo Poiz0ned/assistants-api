@@ -2085,7 +2085,8 @@ paths:
               },
               "trained_tokens": 5768,
               "integrations": [],
-              "seed": 0
+              "seed": 0,
+              "estimated_finish": 0
             }
   /fine_tuning/jobs/{fine_tuning_job_id}/events:
     get:
@@ -3830,6 +3831,72 @@ paths:
                 "user": "abc123"
               }
             }
+    delete:
+      operationId: deleteMessage
+      tags:
+        - Assistants
+      summary: Deletes a message.
+      parameters:
+        - in: path
+          name: thread_id
+          required: true
+          schema:
+            type: string
+          description: The ID of the thread to which this message belongs.
+        - in: path
+          name: message_id
+          required: true
+          schema:
+            type: string
+          description: The ID of the message to delete.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteMessageResponse"
+      x-oaiMeta:
+        name: Delete message
+        group: threads
+        beta: true
+        returns: Deletion status
+        examples:
+          request:
+            curl: |
+              curl -X DELETE https://api.openai.com/v1/threads/thread_abc123/messages/msg_abc123 \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -H "OpenAI-Beta: assistants=v2"
+            python: |
+              from openai import OpenAI
+              client = OpenAI()
+
+              deleted_message = client.beta.threads.messages.delete(
+                message_id="msg_abc12",
+                thread_id="thread_abc123",
+              )
+              print(deleted_message)
+            node.js: |-
+              import OpenAI from "openai";
+
+              const openai = new OpenAI();
+
+              async function main() {
+                const deletedMessage = await openai.beta.threads.messages.del(
+                  "thread_abc123",
+                  "msg_abc123"
+                );
+              
+                console.log(deletedMessage);
+              }
+          response: |
+            {
+              "id": "msg_abc123",
+              "object": "thread.message.deleted",
+              "deleted": true
+            }
+      
 
   /threads/runs:
     post:
@@ -5585,7 +5652,7 @@ paths:
               const openai = new OpenAI();
 
               async function main() {
-                const vectorStores = await openai.vectorStores.list();
+                const vectorStores = await openai.beta.vectorStores.list();
                 console.log(vectorStores);
               }
 
@@ -5673,7 +5740,7 @@ paths:
               const openai = new OpenAI();
 
               async function main() {
-                const vectorStore = await openai.vectorStores.create({
+                const vectorStore = await openai.beta.vectorStores.create({
                   name: "Support FAQ"
                 });
                 console.log(vectorStore);
@@ -5741,7 +5808,7 @@ paths:
               const openai = new OpenAI();
 
               async function main() {
-                const vectorStore = await openai.vectorStores.retrieve(
+                const vectorStore = await openai.beta.vectorStores.retrieve(
                   "vs_abc123"
                 );
                 console.log(vectorStore);
@@ -5808,7 +5875,7 @@ paths:
               const openai = new OpenAI();
 
               async function main() {
-                const vectorStore = await openai.vectorStores.update(
+                const vectorStore = await openai.beta.vectorStores.update(
                   "vs_abc123",
                   {
                     name: "Support FAQ"
@@ -5879,7 +5946,7 @@ paths:
               const openai = new OpenAI();
 
               async function main() {
-                const deletedVectorStore = await openai.vectorStores.delete(
+                const deletedVectorStore = await openai.beta.vectorStores.del(
                   "vs_abc123"
                 );
                 console.log(deletedVectorStore);
@@ -5947,7 +6014,7 @@ paths:
         name: List vector store files
         group: vector_stores
         beta: true
-        returns: A list of [vector store file](/docs/api-reference/vector-stores/file-object) objects.
+        returns: A list of [vector store file](/docs/api-reference/vector-stores-files/file-object) objects.
         examples:
           request:
             curl: |
@@ -5968,7 +6035,7 @@ paths:
               const openai = new OpenAI();
 
               async function main() {
-                const vectorStoreFiles = await openai.vectorStores.files.list(
+                const vectorStoreFiles = await openai.beta.vectorStores.files.list(
                   "vs_abc123"
                 );
                 console.log(vectorStoreFiles);
@@ -6027,7 +6094,7 @@ paths:
         name: Create vector store file
         group: vector_stores
         beta: true
-        returns: A [vector store file](/docs/api-reference/vector-stores/file-object) object.
+        returns: A [vector store file](/docs/api-reference/vector-stores-files/file-object) object.
         examples:
           request:
             curl: |
@@ -6067,7 +6134,10 @@ paths:
               "id": "file-abc123",
               "object": "vector_store.file",
               "created_at": 1699061776,
-              "vector_store_id
+              "usage_bytes": 1234,
+              "vector_store_id": "vs_abcd",
+              "status": "completed",
+              "last_error": null
             }
 
   /vector_stores/{vector_store_id}/files/{file_id}:
@@ -6102,7 +6172,7 @@ paths:
         name: Retrieve vector store file
         group: vector_stores
         beta: true
-        returns: The [vector store file](/docs/api-reference/vector-stores/file-object) object.
+        returns: The [vector store file](/docs/api-reference/vector-stores-files/file-object) object.
         examples:
           request:
             curl: |
@@ -6124,7 +6194,7 @@ paths:
               const openai = new OpenAI();
 
               async function main() {
-                const vectorStoreFile = await openai.vectorStores.files.retrieve(
+                const vectorStoreFile = await openai.beta.vectorStores.files.retrieve(
                   "vs_abc123",
                   "file-abc123"
                 );
@@ -6137,7 +6207,9 @@ paths:
               "id": "file-abc123",
               "object": "vector_store.file",
               "created_at": 1699061776,
-              "vector_store_id": "vs_abc123"
+              "vector_store_id": "vs_abcd",
+              "status": "completed",
+              "last_error": null
             }
     delete:
       operationId: deleteVectorStoreFile
@@ -6238,7 +6310,7 @@ paths:
         name: Create vector store file batch
         group: vector_stores
         beta: true
-        returns: A [vector store file batch](/docs/api-reference/vector-stores/batch-object) object.
+        returns: A [vector store file batch](/docs/api-reference/vector-stores-file-batches/batch-object) object.
         examples:
           request:
             curl: |
@@ -6321,7 +6393,7 @@ paths:
         name: Retrieve vector store file batch
         group: vector_stores
         beta: true
-        returns: The [vector store file batch](/docs/api-reference/vector-stores/batch-object) object.
+        returns: The [vector store file batch](/docs/api-reference/vector-stores-file-batches/batch-object) object.
         examples:
           request:
             curl: |
@@ -6343,7 +6415,7 @@ paths:
               const openai = new OpenAI();
 
               async function main() {
-                const vectorStoreFileBatch = await openai.vectorStores.fileBatches.retrieve(
+                const vectorStoreFileBatch = await openai.beta.vectorStores.fileBatches.retrieve(
                   "vs_abc123",
                   "vsfb_abc123"
                 );
@@ -6356,7 +6428,15 @@ paths:
               "id": "vsfb_abc123",
               "object": "vector_store.file_batch",
               "created_at": 1699061776,
-              "vector_store_id": "vs_abc123"
+              "vector_store_id": "vs_abc123",
+              "status": "in_progress",
+              "file_counts": {
+                "in_progress": 1,
+                "completed": 1,
+                "failed": 0,
+                "cancelled": 0,
+                "total": 0,
+              }
             }
 
   /vector_stores/{vector_store_id}/file_batches/{batch_id}/cancel:
@@ -6496,7 +6576,7 @@ paths:
         name: List vector store files in a batch
         group: vector_stores
         beta: true
-        returns: A list of [vector store file](/docs/api-reference/vector-stores/file-object) objects.
+        returns: A list of [vector store file](/docs/api-reference/vector-stores-files/file-object) objects.
         examples:
           request:
             curl: |
@@ -6508,7 +6588,7 @@ paths:
               from openai import OpenAI
               client = OpenAI()
 
-              vector_store_files = client.beta.vector_stores.file_batches.files.list(
+              vector_store_files = client.beta.vector_stores.file_batches.list_files(
                 vector_store_id="vs_abc123",
                 batch_id="vsfb_abc123"
               )
@@ -6518,7 +6598,7 @@ paths:
               const openai = new OpenAI();
 
               async function main() {
-                const vectorStoreFiles = await openai.vectorStores.fileBatches.files.list(
+                const vectorStoreFiles = await openai.beta.vectorStores.fileBatches.listFiles(
                   "vs_abc123",
                   "vsfb_abc123"
                 );
@@ -6572,11 +6652,11 @@ paths:
 
                     See [upload file](/docs/api-reference/files/create) for how to upload a file.
 
-                    Your input file must be formatted as a JSONL file, and must be uploaded with the purpose `batch`.
+                    Your input file must be formatted as a [JSONL file](/docs/api-reference/batch/requestInput), and must be uploaded with the purpose `batch`.
                 endpoint:
                   type: string
-                  enum: ["/v1/chat/completions"]
-                  description: The endpoint to be used for all requests in the batch. Currently only `/v1/chat/completions` is supported.
+                  enum: ["/v1/chat/completions", "/v1/embeddings"]
+                  description: The endpoint to be used for all requests in the batch. Currently `/v1/chat/completions` and `/v1/embeddings` are supported.
                 completion_window:
                   type: string
                   enum: ["24h"]
@@ -6718,7 +6798,7 @@ paths:
                 }
               }
 
-              main(); 
+              main();
           response: |
             {
               "object": "list",
@@ -6805,7 +6885,7 @@ paths:
                 console.log(batch);
               }
 
-              main(); 
+              main();
           response: &batch_object |
             {
               "id": "batch_abc123",
@@ -6884,7 +6964,7 @@ paths:
                 console.log(batch);
               }
 
-              main(); 
+              main();
           response: |
             {
               "id": "batch_abc123",
@@ -7132,6 +7212,8 @@ components:
           type: boolean
           nullable: true
           default: false
+        stream_options:
+          $ref: "#/components/schemas/ChatCompletionStreamOptions"
         suffix:
           description: |
             The suffix that comes after a completion of inserted text.
@@ -7510,18 +7592,20 @@ components:
 
     ChatCompletionToolChoiceOption:
       description: |
-        Controls which (if any) function is called by the model.
-        `none` means the model will not call a function and instead generates a message.
-        `auto` means the model can pick between generating a message or calling a function.
-        Specifying a particular function via `{"type": "function", "function": {"name": "my_function"}}` forces the model to call that function.
+        Controls which (if any) tool is called by the model.
+        `none` means the model will not call any tool and instead generates a message.
+        `auto` means the model can pick between generating a message or calling one or more tools.
+        `required` means the model must call one or more tools.
+        Specifying a particular tool via `{"type": "function", "function": {"name": "my_function"}}` forces the model to call that tool.
 
-        `none` is the default when no functions are present. `auto` is the default if functions are present.
+        `none` is the default when no tools are present. `auto` is the default if tools are present.
       oneOf:
         - type: string
           description: >
-            `none` means the model will not call a function and instead generates a message.
-            `auto` means the model can pick between generating a message or calling a function.
-          enum: [none, auto]
+            `none` means the model will not call any tool and instead generates a message.
+            `auto` means the model can pick between generating a message or calling one or more tools.
+            `required` means the model must call one or more tools.
+          enum: [none, auto, required]
         - $ref: "#/components/schemas/ChatCompletionNamedToolChoice"
       x-oaiExpandable: true
 
@@ -7614,6 +7698,18 @@ components:
         - assistant
         - tool
         - function
+
+    ChatCompletionStreamOptions:
+      description: |
+        Options for streaming response. Only set this when you set `stream: true`.
+      type: object
+      nullable: true
+      default: null
+      properties:
+        include_usage:
+          type: boolean
+          description: |
+            If set, an additional chunk will be streamed before the `data: [DONE]` message. The `usage` field on this chunk shows the token usage statistics for the entire request, and the `choices` field will always be an empty array. All other chunks will also include a `usage` field, but with a null value.
 
     ChatCompletionResponseMessage:
       type: object
@@ -7809,6 +7905,8 @@ components:
           type: boolean
           nullable: true
           default: false
+        stream_options:
+          $ref: "#/components/schemas/ChatCompletionStreamOptions"
         temperature:
           type: number
           minimum: 0
@@ -8068,7 +8166,9 @@ components:
           description: A unique identifier for the chat completion. Each chunk has the same ID.
         choices:
           type: array
-          description: A list of chat completion choices. Can be more than one if `n` is greater than 1.
+          description: |
+            A list of chat completion choices. Can contain more than one elements if `n` is greater than 1. Can also be empty for the
+            last chunk if you set `stream_options: {"include_usage": true}`.
           items:
             type: object
             required:
@@ -8109,6 +8209,25 @@ components:
           type: string
           description: The object type, which is always `chat.completion.chunk`.
           enum: [chat.completion.chunk]
+        usage:
+          type: object
+          description: |
+            An optional field that will only be present when you set `stream_options: {"include_usage": true}` in your request.
+            When present, it contains a null value except for the last chunk which contains the token usage statistics for the entire request.
+          properties:
+            completion_tokens:
+              type: integer
+              description: Number of tokens in the generated completion.
+            prompt_tokens:
+              type: integer
+              description: Number of tokens in the prompt.
+            total_tokens:
+              type: integer
+              description: Total number of tokens used in the request (prompt + completion).
+          required:
+            - prompt_tokens
+            - completion_tokens
+            - total_tokens
       required:
         - choices
         - created
@@ -9286,6 +9405,10 @@ components:
         seed:
           type: integer
           description: The seed used for the fine-tuning job.
+        estimated_finish:
+          type: integer
+          nullable: true
+          description: The Unix timestamp (in seconds) for when the fine-tuning job is estimated to finish. The value will be null if the fine-tuning job is not running.
       required:
         - created_at
         - error
@@ -9988,15 +10111,17 @@ components:
       description: |
         Controls which (if any) tool is called by the model.
         `none` means the model will not call any tools and instead generates a message.
-        `auto` is the default value and means the model can pick between generating a message or calling a tool.
+        `auto` is the default value and means the model can pick between generating a message or calling one or more tools.
+        `required` means the model must call one or more tools before responding to the user.
         Specifying a particular tool like `{"type": "file_search"}` or `{"type": "function", "function": {"name": "my_function"}}` forces the model to call that tool.
 
       oneOf:
         - type: string
           description: >
-            `none` means the model will not call a function and instead generates a message.
-            `auto` means the model can pick between generating a message or calling a function.
-          enum: [none, auto]
+            `none` means the model will not call any tools and instead generates a message.
+            `auto` means the model can pick between generating a message or calling one or more tools.
+            `required` means the model must call one or more tools before responding to the user.
+          enum: [none, auto, required]
         - $ref: "#/components/schemas/AssistantsNamedToolChoice"
       x-oaiExpandable: true
 
@@ -11840,8 +11965,8 @@ components:
         name:
           description: The name of the vector store.
           type: string
-        bytes:
-          description: The byte size of the vector store.
+        usage_bytes:
+          description: The total number of bytes used by the files in the vector store.
           type: integer
         file_counts:
           type: object
@@ -11889,11 +12014,11 @@ components:
       required:
         - id
         - object
+        - usage_bytes
         - created_at
         - status
         - last_active_at
         - name
-        - bytes
         - file_counts
         - metadata
       x-oaiMeta:
@@ -11904,9 +12029,9 @@ components:
             "id": "vs_123",
             "object": "vector_store",
             "created_at": 1698107661,
+            "usage_bytes": 123456,
             "last_active_at": 1698107661,
             "name": "my_vector_store",
-            "bytes": 123456,
             "status": "completed",
             "file_counts": {
               "in_progress": 0,
@@ -12009,6 +12134,9 @@ components:
           description: The object type, which is always `vector_store.file`.
           type: string
           enum: ["vector_store.file"]
+        usage_bytes:
+          description: The total vector store usage in bytes. Note that this may be different from the original file size.
+          type: integer
         created_at:
           description: The Unix timestamp (in seconds) for when the vector store file was created.
           type: integer
@@ -12043,6 +12171,7 @@ components:
       required:
         - id
         - object
+        - usage_bytes
         - created_at
         - vector_store_id
         - status
@@ -12054,6 +12183,7 @@ components:
           {
             "id": "file-abc123",
             "object": "vector_store.file",
+            "usage_bytes": 1234,
             "created_at": 1698107661,
             "vector_store_id": "vs_abc123",
             "status": "completed",
@@ -12620,40 +12750,31 @@ components:
           type: string
           description: The ID of the file containing the outputs of requests with errors.
         created_at:
-          type: string
-          format: integer
+          type: integer
           description: The Unix timestamp (in seconds) for when the batch was created.
         in_progress_at:
-          type: string
-          format: integer
+          type: integer
           description: The Unix timestamp (in seconds) for when the batch started processing.
         expires_at:
-          type: string
-          format: integer
+          type: integer
           description: The Unix timestamp (in seconds) for when the batch will expire.
         finalizing_at:
-          type: string
-          format: integer
+          type: integer
           description: The Unix timestamp (in seconds) for when the batch started finalizing.
         completed_at:
-          type: string
-          format: integer
+          type: integer
           description: The Unix timestamp (in seconds) for when the batch was completed.
         failed_at:
-          type: string
-          format: integer
+          type: integer
           description: The Unix timestamp (in seconds) for when the batch failed.
         expired_at:
-          type: string
-          format: integer
+          type: integer
           description: The Unix timestamp (in seconds) for when the batch expired.
         cancelling_at:
-          type: string
-          format: integer
+          type: integer
           description: The Unix timestamp (in seconds) for when the batch started cancelling.
         cancelled_at:
-          type: string
-          format: integer
+          type: integer
           description: The Unix timestamp (in seconds) for when the batch was cancelled.
         request_counts:
           type: object
@@ -12702,7 +12823,7 @@ components:
           description: The HTTP method to be used for the request. Currently only `POST` is supported.
         url:
           type: string
-          description: The OpenAI API relative URL to be used for the request. Currently only `/v1/chat/completions` is supported.
+          description: The OpenAI API relative URL to be used for the request. Currently `/v1/chat/completions` and `/v1/embeddings` are supported.
       x-oaiMeta:
         name: The request input object
         example: |
@@ -12895,7 +13016,9 @@ x-oaiMeta:
     - id: batch
       title: Batch
       description: |
-        Create large batches of API requests to run asynchronously.
+        Create large batches of API requests for asynchronous processing. The Batch API returns completions within 24 hours for a 50% discount.
+
+        Related guide: [Batch](/docs/guides/batch)
       navigationGroup: endpoints
       sections:
         - type: endpoint
@@ -13067,6 +13190,9 @@ x-oaiMeta:
         - type: endpoint
           key: modifyMessage
           path: modifyMessage
+        - type: endpoint
+          key: deleteMessage
+          path: deleteMessage
         - type: object
           key: MessageObject
           path: object
@@ -13163,6 +13289,9 @@ x-oaiMeta:
         - type: endpoint
           key: listVectorStoreFiles
           path: listFiles
+        - type: endpoint
+          key: getVectorStoreFile
+          path: getFile
         - type: endpoint
           key: deleteVectorStoreFile
           path: deleteFile
